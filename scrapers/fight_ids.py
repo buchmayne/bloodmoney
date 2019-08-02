@@ -10,7 +10,8 @@ from bs4 import BeautifulSoup
 landing_page = 'https://www.ufc.com/events'
 
 headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+        'User-Agent':
+        'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
     }
 
 events_per_page = 8
@@ -213,7 +214,8 @@ print(single_event)
 
 # test = 'https://www.ufc.com/matchup/908/7717/post'
 # headers = {
-#         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36',
+#         'User-Agent':
+#         'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36',
 #     }
 # raw_html = get(test, headers=headers)
 # html = BeautifulSoup(raw_html.content, 'html.parser')
