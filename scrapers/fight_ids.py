@@ -30,21 +30,29 @@ url_fight_format = 'https://www.ufc.com/matchup/{}/{}'
 # FUNCTIONS #
 
 
-def get_total_pages(events_per_page):
+def get_total_pages(events_per_page, landing_page, headers):
     """
-    TBD
+    Inputs:
+        events_per_page: int
+            the number of events on each page of the ufc site
+        landing_page: str
+            landing page is mostly likely static and directs to https://www.ufc.com/events
+        headers: dict
+            headers defines the user agent and is used in the get request
+    Outputs:
+        total_pages: int
+            integer count of the total past ufc events divided by events per page
     """
     page = get(landing_page, headers=headers)
     page_html = BeautifulSoup(page.content, 'html.parser')
 
     past_events = page_html.find(id="events-list-past")
-    past_events = past_events.find_all('div', 'althelete-total')
+    past_events = past_events.find('div', 'althelete-total')
+    total_past_events = past_events.get_text()
 
-    total_past_events = [event.text for event in past_events]
-
-    # extract the total events as an int
+    # extract the total number of events as an int
     count_pattern = '^\\d*'
-    total_past_events = int(re.findall(count_pattern, total_past_events[0])[0])
+    total_past_events = int(re.search(count_pattern, total_past_events).group(0))
 
     # extract the total number of event pages
     total_pages = math.ceil(total_past_events / events_per_page)
@@ -205,12 +213,16 @@ df = get_first_page_event_ids()
 total_pages = get_total_pages(events_per_page=events_per_page)
 df = get_all_event_ids(event_ids_df=df, total_pages=total_pages)
 
-# Scraping a single UFC page
-example_card_suffix = df.loc[0, 'event_url']
+df.to_csv('data/all_event_ids.csv')
 
-single_event = get_matchups_from_event(card_suffix=example_card_suffix)
+## Scraping a single UFC page ##
+# example_card_suffix = df.loc[0, 'event_url']
 
-print(single_event)
+# single_event = get_matchups_from_event(card_suffix=example_card_suffix)
+
+# print(single_event)
+
+## Below is theoretical ##
 
 # test = 'https://www.ufc.com/matchup/908/7717/post'
 # headers = {
