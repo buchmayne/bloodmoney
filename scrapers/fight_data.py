@@ -1,7 +1,7 @@
 from requests import get
 import pandas as pd
 
-fight_ids = pd.read_csv('../data/fight_ids.csv', dtype=str)
+fight_ids = pd.read_csv('data/fight_ids.csv', dtype=str)
 test_event_id = fight_ids.loc[0, 'event_id']
 
 r = get('https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'.format(test_event_id)).json()
