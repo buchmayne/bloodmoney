@@ -5,16 +5,7 @@ from requests import get
 import pandas as pd
 from bs4 import BeautifulSoup
 
-
-# PARAMETERS #
-landing_page = 'https://www.ufc.com/events'
-
-headers = {
-        'User-Agent':
-        'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
-    }
-
-events_per_page = 8
+from parameters import landing_page, headers, events_per_page, events_page, output_path_fight_ids_csv
 
 # All standard UFC fight cards have a url of the following form, formatted with
 # the fight card number (so UFC 235 would be https://www.ufc.com/event/ufc-235)
@@ -31,15 +22,11 @@ url_fight_format = 'https://www.ufc.com/matchup/{}/{}'
 
 
 def get_total_pages(
-    events_per_page=8,
-    landing_page='https://www.ufc.com/events',
-    headers={
-        'User-Agent':
-        'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
-    }
+    events_per_page=events_per_page,
+    landing_page=landing_page,
+    headers=headers
 ):
     """
-    This function returns the number of event pages on the ufc site
     Inputs:
         events_per_page: int
             the number of events on each page of the ufc site
@@ -68,13 +55,7 @@ def get_total_pages(
     return total_pages
 
 
-def extract_event_ids(
-    events_page='https://www.ufc.com/events?page=0',
-    headers={
-        'User-Agent':
-        'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
-    }
-):
+def extract_event_ids(events_page=events_per_page, headers=headers):
     """
     Inputs:
         events_page: str
@@ -105,13 +86,7 @@ def extract_event_ids(
     return event_ids
 
 
-def get_first_page_event_ids(
-    events_page='https://www.ufc.com/events?page=0',
-    headers={
-        'User-Agent':
-        'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
-    }
-):
+def get_first_page_event_ids(events_page=events_page, headers=headers):
     """
     Inputs:
         events_page: str
@@ -142,54 +117,69 @@ def get_first_page_event_ids(
     return event_ids_df
 
 
-print(get_first_page_event_ids())
-# def get_all_event_ids(event_ids_df, total_pages):
-#     """
-#     TBD
-#     """
-#     # loop through each page and append the event url and id to the dataframe
-#     list_tmp_dfs = []
-#     events_page_format = 'https://www.ufc.com/events?page={}'
-#     tmp_pattern = "(?<=href=\"/event/).*(?=\"><span)"
+def get_all_event_ids(event_ids_df, total_pages):
+    """
+    Inputs:
+        event_ids_df: pd.DataFrame
+            index:
+                1) Default/Row Id
+            columns:
+                1) event_url: str
+                2) event_id: str
+        total_pages: int
+            integer count of the total past ufc events divided by events per page
+    """
+    # loop through each page and append the event url and id to the dataframe
+    list_tmp_dfs = []
+    events_page_format = 'https://www.ufc.com/events?page={}'
+    tmp_pattern = "(?<=href=\"/event/).*(?=\"><span)"
 
-#     for page_num in range(1, total_pages):
-#         # select the correct page from the listed past events
-#         tmp_page = events_page_format.format(page_num)
+    for page_num in range(1, total_pages):
+        # select the correct page from the listed past events
+        tmp_page = events_page_format.format(page_num)
 
-#         raw_html = get(tmp_page, headers=headers)
-#         html = BeautifulSoup(raw_html.content, 'html.parser')
+        raw_html = get(tmp_page, headers=headers)
+        html = BeautifulSoup(raw_html.content, 'html.parser')
 
-#         tmp_ids = []
+        tmp_ids = []
 
-#         tmp_events_past = html.find(id="events-list-past")
-#         tmp_result_actions = tmp_events_past.find_all(
-#             'div',
-#             'c-card-event--result__actions'
-#             )
+        tmp_events_past = html.find(id="events-list-past")
+        tmp_result_actions = tmp_events_past.find_all(
+            'div',
+            'c-card-event--result__actions'
+            )
 
-#         for i in list(range(len(tmp_result_actions))):
-#             try:
-#                 tmp = tmp_result_actions[i].find('a')
-#                 tmp_ids.append(tmp)
-#             except KeyError:
-#                 pass
+        for i in list(range(len(tmp_result_actions))):
+            try:
+                tmp = tmp_result_actions[i].find('a')
+                tmp_ids.append(tmp)
+            except KeyError:
+                pass
 
-#         tmp_ids = [re.findall(tmp_pattern, str(event)) for event in tmp_ids]
+        tmp_ids = [re.findall(tmp_pattern, str(event)) for event in tmp_ids]
 
-#         # flatten the list
-#         tmp_ids = [item for sublist in tmp_ids for item in sublist]
+        # flatten the list
+        tmp_ids = [item for sublist in tmp_ids for item in sublist]
 
-#         tmp_df = pd.DataFrame(tmp_ids, columns=['event'])
-#         tmp_df = tmp_df['event'].str.split(pat='#', expand=True)
+        tmp_df = pd.DataFrame(tmp_ids, columns=['event'])
+        tmp_df = tmp_df['event'].str.split(pat='#', expand=True)
 
-#         tmp_df.columns = ['event_url', 'event_id']
+        tmp_df.columns = ['event_url', 'event_id']
 
-#         list_tmp_dfs.append(tmp_df)
+        list_tmp_dfs.append(tmp_df)
 
-#     event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)]).\
-#         reset_index(drop=True)
+    event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)]).\
+        reset_index(drop=True)
 
-#     return event_ids_df
+    return event_ids_df
+
+
+if __name__ == '__main__':
+    total_pages = get_total_pages()
+    first_page_event_ids = get_first_page_event_ids()
+    all_event_ids = get_all_event_ids(first_page_event_ids, total_pages)
+    all_event_ids.to_csv(output_path_fight_ids_csv, index=False)
+    print('done!')
 
 
 # def get_matchups_from_event(card_suffix):
