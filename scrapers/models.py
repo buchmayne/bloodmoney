@@ -4,6 +4,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 import settings
 
+# http://newcoder.io/scrape/part-4/
+
 DeclarativeBase = declarative_base()
 
 
