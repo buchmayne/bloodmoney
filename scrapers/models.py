@@ -9,7 +9,7 @@ import settings
 DeclarativeBase = declarative_base()
 
 
-def create_deals_table(engine):
+def create_eventid_table(engine):
     '''
     ?
     '''
@@ -24,12 +24,23 @@ def db_connect():
     return create_engine(URL(**settings.DATABASE))
 
 
+class EventId(DeclarativeBase):
+    '''
+    Table for Fight URL extensions and EventIds
+    '''
+    __tablename__ = "eventid"
+
+    id = Column(Integer, primary_key=True)
+    event_url = Column('event_url', String, nullable=True)
+    event_id = Column('event_id', String, nullable=True)
+
+
 class Events(DeclarativeBase):
-    """Sqlalchemy event model"""
+    """Events Data Model"""
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True)
-    event_id = Column('event_id', String)
+    event_id = Column('event_id', String, nullable=True)
     timestamp = Column('timestamp', DateTime, nullable=True)
     date = Column('date', String, nullable=True)
     gmt = Column('gmt', String, nullable=True)
