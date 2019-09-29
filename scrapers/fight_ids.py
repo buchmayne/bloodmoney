@@ -1,11 +1,9 @@
 import re
 import math
 from requests import get
-
 import pandas as pd
 from bs4 import BeautifulSoup
 import psycopg2
-
 from parameters import landing_page, headers, events_per_page, events_page
 
 
@@ -80,7 +78,7 @@ def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, hea
         headers: dict
             headers defines the user agent and is used in the get request
     Outputs:
-        event_ids_df: pd.DataFrame
+        event_ids_df: pd.DataFrame | None
             index:
                 1) Default/Row Id
             columns:
@@ -107,72 +105,16 @@ def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, hea
             .values\
             .astype(int)[0]
 
-        return event_ids_df.loc[0:(most_recent_index - 1), :]
-
-    return event_ids_df
-
-
-# TO DO: NEED TO CHANGE get_all_event_ids function to work when the most recent
-# event is past the first page. right now the code will not work in the case where
-# there is more than one page between the most recent event in the db and the most
-# recent event on the site
-def get_all_event_ids(event_ids_df, total_pages):
-    """
-    Inputs:
-        event_ids_df: pd.DataFrame
-            index:
-                1) Default/Row Id
-            columns:
-                1) event_url: str
-                2) event_id: str
-        total_pages: int
-            integer count of the total past ufc events divided by events per page
-    """
-    # loop through each page and append the event url and id to the dataframe
-    list_tmp_dfs = []
-    events_page_format = 'https://www.ufc.com/events?page={}'
-    tmp_pattern = "(?<=href=\"/event/).*(?=\"><span)"
-
-    for page_num in range(1, total_pages):
-        # select the correct page from the listed past events
-        tmp_page = events_page_format.format(page_num)
-
-        raw_html = get(tmp_page, headers=headers)
-        html = BeautifulSoup(raw_html.content, 'html.parser')
-
-        tmp_ids = []
-
-        tmp_events_past = html.find(id="events-list-past")
-        tmp_result_actions = tmp_events_past.find_all(
-            'div',
-            'c-card-event--result__actions'
-            )
-
-        for i in list(range(len(tmp_result_actions))):
-            try:
-                tmp = tmp_result_actions[i].find('a')
-                tmp_ids.append(tmp)
-            except KeyError:
-                pass
-
-        tmp_ids = [re.findall(tmp_pattern, str(event)) for event in tmp_ids]
-
-        # flatten the list
-        tmp_ids = [item for sublist in tmp_ids for item in sublist]
-
-        tmp_df = pd.DataFrame(tmp_ids, columns=['event'])
-        tmp_df = tmp_df['event'].str.split(pat='#', expand=True)
-
-        tmp_df.columns = ['event_url', 'event_id']
-
-        list_tmp_dfs.append(tmp_df)
-
-    event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)]).\
-        reset_index(drop=True)
-
-    return event_ids_df
+        new_rows = event_ids_df.loc[0:(most_recent_index - 1), :]\
+            .set_index('event_id', drop=True)
+        return new_rows
+    else:
+        return None
 
 
+# TO DO: need to add function which updates data when there are more than one
+# page worth of new eventids. Currently data is only being updated when the
+# new data is on the first page of past events on the ufc site.
 if __name__ == "__main__":
     conn = psycopg2.connect(
         host="localhost",
@@ -183,10 +125,14 @@ if __name__ == "__main__":
 
     cur = conn.cursor()
     cur.execute("SELECT event_id FROM eventid;")
-    # NEED TO FIGURE OUT HOW TO APPEND THE TABLE IN THE DB AT THE TOP
-    # ALSO NEED TO GUARD AGAINST FUNCTION FAILING
+
     most_recent_event_id = cur.fetchone()[0]
     event_df_updated = get_most_recent_event_ids(most_recent_event_id)
-    print(event_df_updated)
+
+    if event_df_updated is not None:
+        for index, row in event_df_updated.itertuples():
+            cur.execute("INSERT INTO event_id VALUES (%s, %s)", (index, row))
+            conn.commit()
     cur.close()
     conn.close()
+    print('done!')
