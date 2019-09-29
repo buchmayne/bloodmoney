@@ -153,7 +153,7 @@ def get_all_event_ids(event_ids_df, total_pages):
         list_tmp_dfs.append(tmp_df)
 
     event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)]).\
-        reset_index(drop=True)
+        set_index('event_id', drop=True)
 
     return event_ids_df
 
@@ -162,5 +162,10 @@ if __name__ == '__main__':
     total_pages = get_total_pages()
     first_page_event_ids = get_first_page_event_ids()
     all_event_ids = get_all_event_ids(first_page_event_ids, total_pages)
-    all_event_ids.to_sql(name='eventid', con=db_connect(), if_exists='fail', index_label='id')
+    all_event_ids.to_sql(
+        name='eventid',
+        con=db_connect(),
+        if_exists='fail',  # if need to recreate change this to 'replace'
+        index_label='event_id'
+        )
     print('done!')
