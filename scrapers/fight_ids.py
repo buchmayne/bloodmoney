@@ -9,8 +9,6 @@ import psycopg2
 from parameters import landing_page, headers, events_per_page, events_page
 
 
-# TO DO: NEED TO CHANGE SCRAPING CODE TO CHECK FOR EVENT IDS MORE RECENT THAN
-# MOST RECENT EVENT ID IN DATABASE
 def get_total_pages(events_per_page=events_per_page, landing_page=landing_page, headers=headers):
     """
     Inputs:
@@ -41,7 +39,7 @@ def get_total_pages(events_per_page=events_per_page, landing_page=landing_page, 
     return total_pages
 
 
-def extract_event_ids(events_page=events_per_page, headers=headers):
+def extract_event_ids(events_page=events_page, headers=headers):
     """
     Inputs:
         events_page: str
@@ -72,9 +70,11 @@ def extract_event_ids(events_page=events_per_page, headers=headers):
     return event_ids
 
 
-def get_first_page_event_ids(events_page=events_page, headers=headers):
+def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, headers=headers):
     """
     Inputs:
+        most_recent_event_id: str
+            the most recent event id in the fight database
         events_page: str
             url of the first page of past events
         headers: dict
@@ -100,9 +100,22 @@ def get_first_page_event_ids(events_page=events_page, headers=headers):
     event_ids_df = event_ids_df['event'].str.split(pat='#', expand=True)
     event_ids_df.columns = ['event_url', 'event_id']
 
+    # filter dataframe to only have new events
+    if event_ids_df.loc[0, 'event_id'] != most_recent_event_id:
+        most_recent_index = event_ids_df[event_ids_df['event_id'] == most_recent_event_id]\
+            .index\
+            .values\
+            .astype(int)[0]
+
+        return event_ids_df.loc[0:(most_recent_index - 1), :]
+
     return event_ids_df
 
 
+# TO DO: NEED TO CHANGE get_all_event_ids function to work when the most recent
+# event is past the first page. right now the code will not work in the case where
+# there is more than one page between the most recent event in the db and the most
+# recent event on the site
 def get_all_event_ids(event_ids_df, total_pages):
     """
     Inputs:
@@ -170,8 +183,10 @@ if __name__ == "__main__":
 
     cur = conn.cursor()
     cur.execute("SELECT event_id FROM eventid;")
-
-    most_recent_event_id = cur.fetchone()
-    print(most_recent_event_id[0])
+    # NEED TO FIGURE OUT HOW TO APPEND THE TABLE IN THE DB AT THE TOP
+    # ALSO NEED TO GUARD AGAINST FUNCTION FAILING
+    most_recent_event_id = cur.fetchone()[0]
+    event_df_updated = get_most_recent_event_ids(most_recent_event_id)
+    print(event_df_updated)
     cur.close()
     conn.close()
