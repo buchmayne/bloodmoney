@@ -39,7 +39,7 @@ def get_total_pages(events_per_page=events_per_page, landing_page=landing_page, 
     return total_pages
 
 
-def extract_event_ids(events_page=events_per_page, headers=headers):
+def extract_event_ids(events_page=events_page, headers=headers):
     """
     Inputs:
         events_page: str
