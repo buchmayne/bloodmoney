@@ -112,6 +112,10 @@ def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, hea
         return None
 
 
+# TO DO: need to work on the SQL part. Since the event_ids are being entered
+# as characters the script isn't pulling down the right last event id to
+# reference. Additionally there are now duplicate rows in the table
+
 # TO DO: need to add function which updates data when there are more than one
 # page worth of new eventids. Currently data is only being updated when the
 # new data is on the first page of past events on the ufc site.
@@ -130,8 +134,9 @@ if __name__ == "__main__":
     event_df_updated = get_most_recent_event_ids(most_recent_event_id)
 
     if event_df_updated is not None:
+        print('Updating Database with new Event Data')
         for index, row in event_df_updated.itertuples():
-            cur.execute("INSERT INTO event_id VALUES (%s, %s)", (index, row))
+            cur.execute("INSERT INTO eventid(event_id, event_url) VALUES (%s, %s)", (index, row))
             conn.commit()
     cur.close()
     conn.close()
