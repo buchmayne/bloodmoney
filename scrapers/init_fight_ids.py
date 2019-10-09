@@ -80,10 +80,9 @@ def get_first_page_event_ids(events_page=events_page, headers=headers):
     Outputs:
         event_ids_df: pd.DataFrame
             index:
-                1) Default/Row Id
+                1) event_id: int
             columns:
                 1) event_url: str
-                2) event_id: str
     """
     event_ids = extract_event_ids(events_page, headers)
 
@@ -152,8 +151,9 @@ def get_all_event_ids(event_ids_df, total_pages):
 
         list_tmp_dfs.append(tmp_df)
 
-    event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)]).\
-        set_index('event_id', drop=True)
+    event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)])
+    event_ids_df['event_id'] = pd.to_numeric(event_ids_df['event_id'])
+    event_ids_df.set_index('event_id', drop=True, inplace=True)
 
     return event_ids_df
 
