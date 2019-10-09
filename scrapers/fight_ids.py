@@ -78,7 +78,7 @@ def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, hea
         headers: dict
             headers defines the user agent and is used in the get request
     Outputs:
-        event_ids_df: pd.DataFrame | None
+        new_rows: pd.DataFrame | None
             index:
                 2) event_id: int
             columns:
