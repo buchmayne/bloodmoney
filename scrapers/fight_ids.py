@@ -80,10 +80,9 @@ def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, hea
     Outputs:
         event_ids_df: pd.DataFrame | None
             index:
-                1) Default/Row Id
+                2) event_id: int
             columns:
                 1) event_url: str
-                2) event_id: str
     """
     event_ids = extract_event_ids(events_page, headers)
 
@@ -97,6 +96,8 @@ def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, hea
     event_ids_df = pd.DataFrame(event_ids, columns=['event'])
     event_ids_df = event_ids_df['event'].str.split(pat='#', expand=True)
     event_ids_df.columns = ['event_url', 'event_id']
+
+    event_ids_df['event_id'] = pd.to_numeric(event_ids_df['event_id'])
 
     # filter dataframe to only have new events
     if event_ids_df.loc[0, 'event_id'] != most_recent_event_id:
@@ -112,10 +113,6 @@ def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, hea
         return None
 
 
-# TO DO: need to work on the SQL part. Since the event_ids are being entered
-# as characters the script isn't pulling down the right last event id to
-# reference. Additionally there are now duplicate rows in the table
-
 # TO DO: need to add function which updates data when there are more than one
 # page worth of new eventids. Currently data is only being updated when the
 # new data is on the first page of past events on the ufc site.
@@ -128,7 +125,7 @@ if __name__ == "__main__":
     )
 
     cur = conn.cursor()
-    cur.execute("SELECT event_id FROM eventid;")
+    cur.execute("SELECT event_id FROM eventid WHERE event_id IS NOT NULL ORDER BY event_id DESC ;")
 
     most_recent_event_id = cur.fetchone()[0]
     event_df_updated = get_most_recent_event_ids(most_recent_event_id)
