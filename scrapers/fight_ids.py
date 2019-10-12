@@ -125,7 +125,7 @@ if __name__ == "__main__":
     )
 
     cur = conn.cursor()
-    cur.execute("SELECT event_id FROM eventid WHERE event_id IS NOT NULL ORDER BY event_id DESC ;")
+    cur.execute("SELECT event_id FROM eventid WHERE event_id IS NOT NULL ORDER BY event_id DESC;")
 
     most_recent_event_id = cur.fetchone()[0]
     event_df_updated = get_most_recent_event_ids(most_recent_event_id)
