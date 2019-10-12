@@ -18,7 +18,7 @@ list_of_fight_ids = [int(x[0]) for x in all_fights_ids]
 # TO DO: Need to create a new table to store the fight data and
 # will dump the actual fight data into JSON column for now.
 # Once the table creation functionality is defined the next step will be to
-# loop throught the event ids and write to table. Once that is finished need to 
+# loop throught the event ids and write to table. Once that is finished need to
 # add script that will check for new fights and then pull down new data and
 # update table
 
