@@ -7,7 +7,6 @@ headers = {
 
 events_per_page = 8
 events_page = 'https://www.ufc.com/events?page=0'
-output_path_fight_ids_csv = '../data/fight_ids.csv'
 
 # dvk92099qvr17.cloudfront.net/V1{id}/Fnt.json
 
