@@ -165,7 +165,7 @@ if __name__ == '__main__':
     all_event_ids.to_sql(
         name='eventid',
         con=db_connect(),
-        if_exists='fail',  # if need to recreate change this to 'replace'
+        if_exists='replace',  # if need to recreate change this to 'replace'
         index_label='event_id'
         )
     print('done!')
