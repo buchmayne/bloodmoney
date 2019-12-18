@@ -6,7 +6,7 @@ import datetime as dt
 conn = psycopg2.connect(
         host="localhost",
         database="bloodmoneydb",
-        user="buchman",
+        user="postgres",
         password="password"
 )
 
@@ -24,11 +24,14 @@ def format_event_date(text):
         return formatted_date
 
 
-r = get('https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'.format(list_of_fight_ids[0])).json()
+r = get(
+        'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
+        .format(list_of_fight_ids[0])
+        ).json()
 f = r['FMLiveFeed']
 
 
-def add_event_data(feed_data):
+def add_event_data(feed_data, connection):
         event_id = feed_data['EventID']
         timestamp = feed_data['Timestamp']
         date = format_event_date(feed_data['Date'])
@@ -61,30 +64,64 @@ def add_event_data(feed_data):
         insert_data = (
                 event_id, timestamp, date, time, gmt, venue, country, city, cur_fight, event_start, event_end
         )
-        conn = None
         try:
-                # connect to the PostgreSQL database
-                conn = psycopg2.connect(
-                        host="localhost",
-                        database="bloodmoneydb",
-                        user="buchman",
-                        password="password"
-                )
                 # create a new cursor
-                cur = conn.cursor()
+                cur = connection.cursor()
                 # execute the INSERT statement
                 cur.execute(event_data_query, insert_data)
                 # commit the changes to the database
-                conn.commit()
-                # close communication with the database
-                cur.close()
+                connection.commit()
         except (Exception, psycopg2.DatabaseError) as error:
                 print(error)
-        finally:
-                if conn is not None:
-                        conn.close()
+
+
+def add_fights_data(feed_data, connection):
+        fights_data = feed_data['Fights']
+
+        for fight in fights_data:
+                fight_id = fight['FightID']
+                order = fight['Order']
+                accolade_name = fight['AccoladeName']
+                weightclass_id = fight['WeightClassID']
+                weightclass_name = fight['WeightClassName']
+                status = fight['Status']
+                possible_rds = fight['PossibleRds']
+                cur_rd = fight['CurRd']
+                method = fight['Method']
+                ending_round_num = fight['EndingRoundNum']
+
+                fights_data_query = (
+                        """
+                        INSERT INTO fights_data(
+                        fight_id TEXT PRIMARY KEY,
+                        fight_order,
+                        accolade_name,
+                        weight_class_id,
+                        weight_class_name,
+                        status,
+                        possible_rds,
+                        cur_rd,
+                        method,
+                        ending_round_num
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        """
+                )
+                insert_data = (
+                        fight_id, order, accolade_name, weightclass_id, weightclass_name, status, possible_rds, cur_rd, method, ending_round_num
+                )
+                try:
+                        # create a new cursor
+                        cur = connection.cursor()
+                        # execute the INSERT statement
+                        cur.execute(fights_data_query, insert_data)
+                        # commit the changes to the database
+                        connection.commit()
+                except (Exception, psycopg2.DatabaseError) as error:
+                        print(error)
 
 
 if __name__ == "__main__":
-    add_event_data(f)
+    add_event_data(feed_data=f, connection=conn)
+    add_fights_data(feed_data=f, connection=conn)
+    conn.close()
     print('finished')
