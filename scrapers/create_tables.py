@@ -77,7 +77,7 @@ def create_tables():
         conn = psycopg2.connect(
                 host="localhost",
                 database="bloodmoneydb",
-                user="buchman",
+                user="postgres",
                 password="password"
         )
         cur = conn.cursor()
