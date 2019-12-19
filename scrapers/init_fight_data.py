@@ -18,16 +18,18 @@ list_of_fight_ids = [int(x[0]) for x in all_fights_ids]
 
 
 def format_event_date(text):
-        parts = text.split('-')
-        formatted_date = dt.date(int(parts[0]), int(parts[1]), int(parts[2]))
+    parts = text.split('-')
+    formatted_date = dt.date(int(parts[0]), int(parts[1]), int(parts[2]))
 
-        return formatted_date
+    return formatted_date
+
+# create list of all JSON repsonses vs. iterating through
 
 
 r = get(
-        'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
-        .format(list_of_fight_ids[0])
-        ).json()
+    'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
+    .format(list_of_fight_ids[0])
+    ).json()
 f = r['FMLiveFeed']
 
 
@@ -62,7 +64,17 @@ def add_event_data(feed_data, connection):
                 """
         )
         insert_data = (
-                event_id, timestamp, date, time, gmt, venue, country, city, cur_fight, event_start, event_end
+                event_id,
+                timestamp,
+                date,
+                time,
+                gmt,
+                venue,
+                country,
+                city,
+                cur_fight,
+                event_start,
+                event_end
         )
         try:
                 # create a new cursor
@@ -93,7 +105,7 @@ def add_fights_data(feed_data, connection):
                 fights_data_query = (
                         """
                         INSERT INTO fights_data(
-                        fight_id TEXT PRIMARY KEY,
+                        fight_id,
                         fight_order,
                         accolade_name,
                         weight_class_id,
@@ -107,7 +119,16 @@ def add_fights_data(feed_data, connection):
                         """
                 )
                 insert_data = (
-                        fight_id, order, accolade_name, weightclass_id, weightclass_name, status, possible_rds, cur_rd, method, ending_round_num
+                        fight_id,
+                        order,
+                        accolade_name,
+                        weightclass_id,
+                        weightclass_name,
+                        status,
+                        possible_rds,
+                        cur_rd,
+                        method,
+                        ending_round_num
                 )
                 try:
                         # create a new cursor
