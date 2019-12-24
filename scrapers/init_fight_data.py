@@ -24,7 +24,8 @@ def format_event_date(text):
     return formatted_date
 
 # create list of all JSON repsonses vs. iterating through
-
+# Note to Self: Need to go through tables and make sure there is a shared key to perform all the joins
+# Specifically need to make sure that the fighters data can be connected to the specific fight by shared key
 
 r = get(
     'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
@@ -34,7 +35,7 @@ f = r['FMLiveFeed']
 
 
 def add_event_data(feed_data, connection):
-        event_id = feed_data['EventID']
+        event_id = int(feed_data['EventID'])
         timestamp = feed_data['Timestamp']
         date = format_event_date(feed_data['Date'])
         time = feed_data['Time']
@@ -91,30 +92,32 @@ def add_fights_data(feed_data, connection):
         fights_data = feed_data['Fights']
 
         for fight in fights_data:
-                fight_id = fight['FightID']
+                # fighters_dict = fight['Fighters']
+                # fight_actions_dict = fight['FightActions']
+                fight_id = int(fight['FightID'])
                 order = fight['Order']
                 accolade_name = fight['AccoladeName']
                 weightclass_id = fight['WeightClassID']
                 weightclass_name = fight['WeightClassName']
                 status = fight['Status']
-                possible_rds = fight['PossibleRds']
-                cur_rd = fight['CurRd']
+                possible_rds = int(fight['PossibleRds'])
+                cur_rd = int(fight['CurRd'])
                 method = fight['Method']
-                ending_round_num = fight['EndingRoundNum']
+                ending_round_num = int(fight['EndingRoundNum'])
 
                 fights_data_query = (
                         """
                         INSERT INTO fights_data(
-                        fight_id,
-                        fight_order,
-                        accolade_name,
-                        weight_class_id,
-                        weight_class_name,
-                        status,
-                        possible_rds,
-                        cur_rd,
-                        method,
-                        ending_round_num
+                            fight_id,
+                            fight_order,
+                            accolade_name,
+                            weight_class_id,
+                            weight_class_name,
+                            status,
+                            possible_rds,
+                            cur_rd,
+                            method,
+                            ending_round_num
                         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """
                 )
@@ -135,6 +138,154 @@ def add_fights_data(feed_data, connection):
                         cur = connection.cursor()
                         # execute the INSERT statement
                         cur.execute(fights_data_query, insert_data)
+                        # commit the changes to the database
+                        connection.commit()
+                except (Exception, psycopg2.DatabaseError) as error:
+                        print(error)
+
+
+def add_fighters_data(fighters_dict, connection):
+        fighters_data_query = (
+                        """
+                        INSERT INTO fighters_data(
+                            fighter_id,
+                            color,
+                            first_name,
+                            last_name,
+                            short_name,
+                            full_name,
+                            nick_name,
+                            record_tot_fights,
+                            record_win,
+                            record_loss,
+                            record_draw,
+                            record_nc,
+                            foo_city,
+                            foo_state,
+                            foo_county,
+                            foo_tricode,
+                            born_city,
+                            born_state,
+                            born_county,
+                            born_tricode,
+                            dob,
+                            height,
+                            weight,
+                            stance,
+                            outcome
+                        ) VALUES (
+                                %s, %s, %s, %s, %s,
+                                %s, %s, %s, %s, %s,
+                                %s, %s, %s, %s, %s,
+                                %s, %s, %s, %s, %s,
+                                %s, %s, %s, %s, %s
+                        )
+                        """
+                )
+
+        for fighter in fighters_dict:
+                fighter_id = int(fighter['FighterID'])
+                color = fighter['Color']
+                first_name = fighter['FirstName']
+                last_name = fighter['LastName']
+                short_name = fighter['ShortName']
+                full_name = fighter['FullName']
+                nick_name = fighter['NickName']
+                record_tot_fights = int(fighter['Record']['TotFights'])
+                record_win = int(fighter['Record']['Win'])
+                record_loss = int(fighter['Record']['Loss'])
+                record_draw = int(fighter['Record']['Draw'])
+                record_nc = int(fighter['Record']['NC'])
+                foo_city = fighter['FightsOutOf']['City']
+                foo_state = fighter['FightsOutOf']['State']
+                foo_country = fighter['FightsOutOf']['Country']
+                foo_tricode = fighter['FightsOutOf']['TriCode']
+                born_city = fighter['Born']['City']
+                born_state = fighter['Born']['State']
+                born_country = fighter['Born']['Country']
+                born_tricode = fighter['Born']['TriCode']
+                dob = fighter['DOB']
+                height = float(fighter['Height'])
+                weight = float(fighter['Weight'])
+                stance = fighter['Stance']
+                outcome = fighter['Outcome']
+
+                insert_data = (
+                        fighter_id,
+                        color,
+                        first_name,
+                        last_name,
+                        short_name,
+                        full_name,
+                        nick_name,
+                        record_tot_fights,
+                        record_win,
+                        record_loss,
+                        record_draw,
+                        record_nc,
+                        foo_city,
+                        foo_state,
+                        foo_country,
+                        foo_tricode,
+                        born_city,
+                        born_state,
+                        born_country,
+                        born_tricode,
+                        dob,
+                        height,
+                        weight,
+                        stance,
+                        outcome
+                )
+                try:
+                        # create a new cursor
+                        cur = connection.cursor()
+                        # execute the INSERT statement
+                        cur.execute(fighters_data_query, insert_data)
+                        # commit the changes to the database
+                        connection.commit()
+                except (Exception, psycopg2.DatabaseError) as error:
+                        print(error)
+
+
+def add_fight_actions_data(fight_actions_dict, connection, fight_id):
+        fight_actions_data_query = (
+                        """
+                        INSERT INTO fight_actions_data(
+                            action_id,
+                            type,
+                            time,
+                            truck_time,
+                            fighter,
+                            fight_round,
+                            fight_id
+                        ) VALUES (
+                                %s, %s, %s, %s, %s, %s, %s
+                        )
+                        """
+                )
+        for action in fight_actions_dict:
+                action_id = int(action['ActionID'])
+                type_ = action['Type']
+                time = action['Time']
+                truck_time = action['TruckTime']
+                fighter = action['Fighter']
+                round_ = action['Round']
+
+                insert_data = (
+                        action_id,
+                        type_,
+                        time,
+                        truck_time,
+                        fighter,
+                        round_,
+                        fight_id
+                )
+                try:
+                        # create a new cursor
+                        cur = connection.cursor()
+                        # execute the INSERT statement
+                        cur.execute(fight_actions_data_query, insert_data)
                         # commit the changes to the database
                         connection.commit()
                 except (Exception, psycopg2.DatabaseError) as error:
