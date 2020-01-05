@@ -30,7 +30,8 @@ def create_tables():
             possible_rds INTEGER,
             cur_rd INTEGER,
             method VARCHAR (30),
-            ending_round_num INTEGER
+            ending_round_num INTEGER,
+            event_id INTEGER
         )
         """,
         """
