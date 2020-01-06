@@ -6,70 +6,75 @@ def create_tables():
     commands = (
         """
         CREATE TABLE event_data (
-            event_id TEXT PRIMARY KEY,
+            event_id INTEGER PRIMARY KEY,
             time_stamp TIMESTAMP,
             date DATE,
             time TIME,
-            gmt TEXT,
-            venue TEXT,
-            country TEXT,
-            city TEXT,
-            cur_fight TEXT,
-            event_start TEXT,
-            event_end TEXT
+            gmt VARCHAR (20),
+            venue VARCHAR (30),
+            country VARCHAR (20),
+            city VARCHAR (20),
+            cur_fight VARCHAR (20),
+            event_start VARCHAR (20),
+            event_end VARCHAR (20)
         )
         """,
         """
         CREATE TABLE fights_data (
-            fight_id TEXT PRIMARY KEY,
-            fight_order TEXT,
-            accolade_name TEXT,
-            weight_class_id TEXT,
-            weight_class_name TEXT,
-            status TEXT,
+            fight_id INTEGER PRIMARY KEY,
+            fight_order VARCHAR (30),
+            accolade_name VARCHAR (30),
+            weight_class_id VARCHAR (30),
+            weight_class_name VARCHAR (30),
+            status VARCHAR (30),
             possible_rds INTEGER,
             cur_rd INTEGER,
-            method TEXT,
-            ending_round_num INTEGER
+            method VARCHAR (30),
+            ending_round_num INTEGER,
+            event_id INTEGER
         )
         """,
         """
         CREATE TABLE fighters_data (
-            fighter_id TEXT PRIMARY KEY,
-            color TEXT,
-            first_name TEXT,
-            last_name TEXT,
-            short_name TEXT,
-            full_name TEXT,
-            nick_name TEXT,
+            fighter_id INTEGER PRIMARY KEY,
+            color VARCHAR (20),
+            first_name VARCHAR (30),
+            last_name VARCHAR (30),
+            short_name VARCHAR (30),
+            full_name VARCHAR (30),
+            nick_name VARCHAR (30),
             record_tot_fights INTEGER,
             record_win INTEGER,
             record_loss INTEGER,
             record_draw INTEGER,
             record_nc INTEGER,
-            foo_city TEXT,
-            foo_state TEXT,
-            foo_county TEXT,
-            foo_tricode TEXT,
-            born_city TEXT,
-            born_state TEXT,
-            born_county TEXT,
-            born_tricode TEXT,
+            foo_city VARCHAR (20),
+            foo_state VARCHAR (20),
+            foo_county VARCHAR (20),
+            foo_tricode VARCHAR (20),
+            born_city VARCHAR (20),
+            born_state VARCHAR (20),
+            born_county VARCHAR (20),
+            born_tricode VARCHAR (20),
             dob DATE,
             height FLOAT,
             weight FLOAT,
-            stance TEXT,
-            outcome TEXT
+            stance VARCHAR (20),
+            outcome VARCHAR (20),
+            event_id INTEGER,
+            fight_id INTEGER
         )
         """,
         """
         CREATE TABLE fight_actions_data (
-            action_id TEXT PRIMARY KEY,
-            type TEXT,
+            action_id INTEGER PRIMARY KEY,
+            type VARCHAR (20),
             time TIME,
             truck_time TIME,
-            fighter TEXT,
-            fight_round INTEGER
+            fighter VARCHAR (20),
+            fight_round INTEGER,
+            fight_id INTEGER,
+            event_id INTEGER
         )
         """)
     conn = None
@@ -77,7 +82,7 @@ def create_tables():
         conn = psycopg2.connect(
                 host="localhost",
                 database="bloodmoneydb",
-                user="buchman",
+                user="postgres",
                 password="password"
         )
         cur = conn.cursor()
