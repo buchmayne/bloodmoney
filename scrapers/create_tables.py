@@ -61,7 +61,8 @@ def create_tables():
             weight FLOAT,
             stance VARCHAR (20),
             outcome VARCHAR (20),
-            event_id INTEGER
+            event_id INTEGER,
+            fight_id INTEGER
         )
         """,
         """
