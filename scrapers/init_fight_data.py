@@ -116,6 +116,7 @@ def add_fights_data(fights_data, event_id, connection):
                 add_fighters_data(
                         fighters_dict=fighters_dict,
                         event_id=event_id,
+                        fight_id=fight_id,
                         connection=connection
                         )
 
@@ -179,7 +180,7 @@ def add_fights_data(fights_data, event_id, connection):
                         print(error)
 
 
-def add_fighters_data(fighters_dict, event_id, connection):
+def add_fighters_data(fighters_dict, event_id, fight_id, connection):
         fighters_data_query = (
                         """
                         INSERT INTO fighters_data(
@@ -208,7 +209,8 @@ def add_fighters_data(fighters_dict, event_id, connection):
                             weight,
                             stance,
                             outcome,
-                            event_id
+                            event_id,
+                            fight_id
                         ) VALUES (
                                 %s, %s, %s, %s, %s,
                                 %s, %s, %s, %s, %s,
@@ -272,7 +274,8 @@ def add_fighters_data(fighters_dict, event_id, connection):
                         weight,
                         stance,
                         outcome,
-                        event_id
+                        event_id,
+                        fight_id
                 )
                 try:
                         # create a new cursor
