@@ -60,7 +60,8 @@ def create_tables():
             height FLOAT,
             weight FLOAT,
             stance VARCHAR (20),
-            outcome VARCHAR (20)
+            outcome VARCHAR (20),
+            event_id INTEGER
         )
         """,
         """
@@ -71,7 +72,8 @@ def create_tables():
             truck_time TIME,
             fighter VARCHAR (20),
             fight_round INTEGER,
-            fight_id INTEGER
+            fight_id INTEGER,
+            event_id INTEGER
         )
         """)
     conn = None
