@@ -23,15 +23,31 @@ def format_event_date(text):
 
     return formatted_date
 
-# create list of all JSON repsonses vs. iterating through
-# Note to Self: Need to go through tables and make sure there is a shared key to perform all the joins
-# Specifically need to make sure that the fighters data can be connected to the specific fight by shared key
+
+test_fight_id = list_of_fight_ids[0]
 
 r = get(
     'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
-    .format(list_of_fight_ids[0])
+    .format(test_fight_id)
     ).json()
 f = r['FMLiveFeed']
+
+
+def get_data(fight_id, connection):
+        '''
+        TBD: Main function with subcalls which writes data to db
+        '''
+        r = get(
+                'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
+                .format(list_of_fight_ids[0])
+        ).json()
+        f = r['FMLiveFeed']
+
+        event_id = int(f['EventID'])
+        fights_data = f['Fights']
+
+        add_event_data(feed_data=f, connection=connection)
+        add_fights_data(fights_data=fights_data, event_id=event_id, connection=connection)
 
 
 def add_event_data(feed_data, connection):
@@ -88,13 +104,30 @@ def add_event_data(feed_data, connection):
                 print(error)
 
 
-def add_fights_data(feed_data, connection):
-        fights_data = feed_data['Fights']
-
+def add_fights_data(fights_data, event_id, connection):
+        '''
+        TBD: Loop through fights list and for each fight write data to table
+        '''
         for fight in fights_data:
-                # fighters_dict = fight['Fighters']
-                # fight_actions_dict = fight['FightActions']
                 fight_id = int(fight['FightID'])
+
+                # write the fighters data to table
+                fighters_dict = fight['Fighters']
+                add_fighters_data(
+                        fighters_dict=fighters_dict,
+                        event_id=event_id,
+                        connection=connection
+                        )
+
+                # write the fight actions data to table
+                fight_actions_dict = fight['FightActions']
+                add_fight_actions_data(
+                        fight_actions_dict=fight_actions_dict,
+                        fight_id=fight_id,
+                        event_id=event_id,
+                        connection=connection
+                        )
+
                 order = fight['Order']
                 accolade_name = fight['AccoladeName']
                 weightclass_id = fight['WeightClassID']
@@ -117,8 +150,9 @@ def add_fights_data(feed_data, connection):
                             possible_rds,
                             cur_rd,
                             method,
-                            ending_round_num
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            ending_round_num,
+                            event_id
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """
                 )
                 insert_data = (
@@ -131,7 +165,8 @@ def add_fights_data(feed_data, connection):
                         possible_rds,
                         cur_rd,
                         method,
-                        ending_round_num
+                        ending_round_num,
+                        event_id
                 )
                 try:
                         # create a new cursor
@@ -144,7 +179,7 @@ def add_fights_data(feed_data, connection):
                         print(error)
 
 
-def add_fighters_data(fighters_dict, connection):
+def add_fighters_data(fighters_dict, event_id, connection):
         fighters_data_query = (
                         """
                         INSERT INTO fighters_data(
@@ -172,13 +207,14 @@ def add_fighters_data(fighters_dict, connection):
                             height,
                             weight,
                             stance,
-                            outcome
+                            outcome,
+                            event_id
                         ) VALUES (
                                 %s, %s, %s, %s, %s,
                                 %s, %s, %s, %s, %s,
                                 %s, %s, %s, %s, %s,
                                 %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s
+                                %s, %s, %s, %s, %s, %s
                         )
                         """
                 )
@@ -235,7 +271,8 @@ def add_fighters_data(fighters_dict, connection):
                         height,
                         weight,
                         stance,
-                        outcome
+                        outcome,
+                        event_id
                 )
                 try:
                         # create a new cursor
@@ -248,7 +285,7 @@ def add_fighters_data(fighters_dict, connection):
                         print(error)
 
 
-def add_fight_actions_data(fight_actions_dict, connection, fight_id):
+def add_fight_actions_data(fight_actions_dict, fight_id, event_id, connection):
         fight_actions_data_query = (
                         """
                         INSERT INTO fight_actions_data(
@@ -258,7 +295,8 @@ def add_fight_actions_data(fight_actions_dict, connection, fight_id):
                             truck_time,
                             fighter,
                             fight_round,
-                            fight_id
+                            fight_id,
+                            event_id
                         ) VALUES (
                                 %s, %s, %s, %s, %s, %s, %s
                         )
@@ -279,7 +317,8 @@ def add_fight_actions_data(fight_actions_dict, connection, fight_id):
                         truck_time,
                         fighter,
                         round_,
-                        fight_id
+                        fight_id,
+                        event_id
                 )
                 try:
                         # create a new cursor
@@ -293,7 +332,6 @@ def add_fight_actions_data(fight_actions_dict, connection, fight_id):
 
 
 if __name__ == "__main__":
-    add_event_data(feed_data=f, connection=conn)
-    add_fights_data(feed_data=f, connection=conn)
+    get_data(fight_id=test_fight_id, connection=conn)
     conn.close()
     print('finished')
