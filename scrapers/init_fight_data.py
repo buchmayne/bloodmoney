@@ -24,13 +24,13 @@ def format_event_date(text):
     return formatted_date
 
 
-test_fight_id = list_of_fight_ids[0]
+# test_fight_id = list_of_fight_ids[0]
 
-r = get(
-    'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
-    .format(test_fight_id)
-    ).json()
-f = r['FMLiveFeed']
+# r = get(
+#     'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
+#     .format(test_fight_id)
+#     ).json()
+# f = r['FMLiveFeed']
 
 
 def get_data(fight_id, connection):
@@ -39,7 +39,7 @@ def get_data(fight_id, connection):
         '''
         r = get(
                 'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
-                .format(list_of_fight_ids[0])
+                .format(fight_id)
         ).json()
         f = r['FMLiveFeed']
 
@@ -334,7 +334,8 @@ def add_fight_actions_data(fight_actions_dict, fight_id, event_id, connection):
                         print(error)
 
 
-if __name__ == "__main__":
-    get_data(fight_id=test_fight_id, connection=conn)
+if __name__ == "__main__": 
+    for idx in list_of_fight_ids:        
+        get_data(fight_id=idx, connection=conn)
     conn.close()
     print('finished')
