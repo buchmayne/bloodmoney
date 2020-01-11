@@ -301,7 +301,7 @@ def add_fight_actions_data(fight_actions_dict, fight_id, event_id, connection):
                             fight_id,
                             event_id
                         ) VALUES (
-                                %s, %s, %s, %s, %s, %s, %s
+                                %s, %s, %s, %s, %s, %s, %s, %s
                         )
                         """
                 )
