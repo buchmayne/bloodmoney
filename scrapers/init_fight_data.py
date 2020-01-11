@@ -216,7 +216,7 @@ def add_fighters_data(fighters_dict, event_id, fight_id, connection):
                                 %s, %s, %s, %s, %s,
                                 %s, %s, %s, %s, %s,
                                 %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s
+                                %s, %s, %s, %s, %s, %s, %s
                         )
                         """
                 )
