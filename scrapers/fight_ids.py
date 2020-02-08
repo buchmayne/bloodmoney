@@ -114,7 +114,7 @@ def get_most_recent_event_ids(most_recent_event_id, events_page=events_page, hea
 
 
 # TO DO: need to add function which updates data when there are more than one
-# page worth of new eventids. Currently data is only being updated when the
+# page of new eventids. Currently data is only being updated when the
 # new data is on the first page of past events on the ufc site.
 if __name__ == "__main__":
     conn = psycopg2.connect(
