@@ -70,7 +70,7 @@ def create_tables():
             action_id INTEGER PRIMARY KEY,
             type VARCHAR (70),
             time TIME,
-            truck_time TIME,
+            truck_time VARCHAR (70),
             fighter VARCHAR (70),
             fight_round INTEGER,
             fight_id INTEGER,
