@@ -333,9 +333,10 @@ def add_fight_actions_data(fight_actions_dict, fight_id, event_id, connection):
                 except (Exception, psycopg2.DatabaseError) as error:
                         print(error)
 
-
+# NOTE: Script breaks on event id: 891
 if __name__ == "__main__": 
     for idx in list_of_fight_ids:        
+        print(idx)
         get_data(fight_id=idx, connection=conn)
     conn.close()
     print('finished')
