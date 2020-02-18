@@ -120,15 +120,6 @@ def add_fights_data(fights_data, event_id, connection):
                         connection=connection
                         )
 
-                # write the fight actions data to table
-                fight_actions_dict = fight['FightActions']
-                add_fight_actions_data(
-                        fight_actions_dict=fight_actions_dict,
-                        fight_id=fight_id,
-                        event_id=event_id,
-                        connection=connection
-                        )
-
                 order = fight['Order']
                 accolade_name = fight['AccoladeName']
                 weightclass_id = fight['WeightClassID']
@@ -288,54 +279,9 @@ def add_fighters_data(fighters_dict, event_id, fight_id, connection):
                         print(error)
 
 
-def add_fight_actions_data(fight_actions_dict, fight_id, event_id, connection):
-        fight_actions_data_query = (
-                        """
-                        INSERT INTO fight_actions_data(
-                            action_id,
-                            type,
-                            time,
-                            truck_time,
-                            fighter,
-                            fight_round,
-                            fight_id,
-                            event_id
-                        ) VALUES (
-                                %s, %s, %s, %s, %s, %s, %s, %s
-                        )
-                        """
-                )
-        for action in fight_actions_dict:
-                action_id = int(action['ActionID'])
-                type_ = action['Type']
-                time = action['Time']
-                truck_time = action['TruckTime']
-                fighter = action['Fighter']
-                round_ = action['Round']
-
-                insert_data = (
-                        action_id,
-                        type_,
-                        time,
-                        truck_time,
-                        fighter,
-                        round_,
-                        fight_id,
-                        event_id
-                )
-                try:
-                        # create a new cursor
-                        cur = connection.cursor()
-                        # execute the INSERT statement
-                        cur.execute(fight_actions_data_query, insert_data)
-                        # commit the changes to the database
-                        connection.commit()
-                except (Exception, psycopg2.DatabaseError) as error:
-                        print(error)
-
 # NOTE: Script breaks on event id: 891
-if __name__ == "__main__": 
-    for idx in list_of_fight_ids:        
+if __name__ == "__main__":
+    for idx in list_of_fight_ids:
         print(idx)
         get_data(fight_id=idx, connection=conn)
     conn.close()
