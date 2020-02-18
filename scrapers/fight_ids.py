@@ -120,7 +120,7 @@ if __name__ == "__main__":
     conn = psycopg2.connect(
         host="localhost",
         database="bloodmoneydb",
-        user="buchman",
+        user="postgres",
         password="password"
     )
 
