@@ -64,18 +64,6 @@ def create_tables():
             event_id INTEGER,
             fight_id INTEGER
         )
-        """,
-        """
-        CREATE TABLE fight_actions_data (
-            action_id INTEGER PRIMARY KEY,
-            type VARCHAR (70),
-            time TIME,
-            truck_time VARCHAR (70),
-            fighter VARCHAR (70),
-            fight_round INTEGER,
-            fight_id INTEGER,
-            event_id INTEGER
-        )
         """)
     conn = None
     try:
