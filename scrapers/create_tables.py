@@ -9,7 +9,6 @@ def create_tables():
             event_id INTEGER PRIMARY KEY,
             time_stamp TIMESTAMP,
             date DATE,
-            time TIME,
             gmt VARCHAR (70),
             venue VARCHAR (70),
             country VARCHAR (70),
