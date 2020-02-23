@@ -1,6 +1,7 @@
 from requests import get
 import psycopg2
 import datetime as dt
+import numpy as np
 
 
 conn = psycopg2.connect(
@@ -28,7 +29,7 @@ def format_event_date(text):
 
 # r = get(
 #     'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
-#     .format(test_fight_id)
+#     .format(891)
 #     ).json()
 # f = r['FMLiveFeed']
 
@@ -128,7 +129,7 @@ def add_fights_data(fights_data, event_id, connection):
                 possible_rds = int(fight['PossibleRds'])
                 cur_rd = int(fight['CurRd'])
                 method = fight['Method']
-                ending_round_num = int(fight['EndingRoundNum'])
+                ending_round_num = fight['EndingRoundNum']
 
                 fights_data_query = (
                         """
