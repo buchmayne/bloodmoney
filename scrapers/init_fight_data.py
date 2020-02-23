@@ -274,6 +274,7 @@ def add_fighters_data(fighters_dict, event_id, fight_id, connection):
 
 
 # NOTE: Script breaks on event id: 674
+# accolade name, weightclass id, and weightclass name are missing keys from fights
 if __name__ == "__main__":
     for idx in list_of_fight_ids:
         print(idx)
