@@ -54,7 +54,6 @@ def add_event_data(feed_data, connection):
         event_id = int(feed_data['EventID'])
         timestamp = feed_data['Timestamp']
         date = format_event_date(feed_data['Date'])
-        gmt = feed_data['GMT']
         venue = feed_data['Venue']
         country = feed_data['Country']
         city = feed_data['City']
@@ -68,21 +67,19 @@ def add_event_data(feed_data, connection):
                         event_id,
                         time_stamp,
                         date,
-                        gmt,
                         venue,
                         country,
                         city,
                         cur_fight,
                         event_start,
                         event_end
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
         )
         insert_data = (
                 event_id,
                 timestamp,
                 date,
-                gmt,
                 venue,
                 country,
                 city,
