@@ -1,7 +1,6 @@
 from requests import get
 import psycopg2
 import datetime as dt
-import numpy as np
 
 
 conn = psycopg2.connect(
@@ -29,7 +28,7 @@ def format_event_date(text):
 
 # r = get(
 #     'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
-#     .format(891)
+#     .format(674)
 #     ).json()
 # f = r['FMLiveFeed']
 
@@ -55,7 +54,6 @@ def add_event_data(feed_data, connection):
         event_id = int(feed_data['EventID'])
         timestamp = feed_data['Timestamp']
         date = format_event_date(feed_data['Date'])
-        time = feed_data['Time']
         gmt = feed_data['GMT']
         venue = feed_data['Venue']
         country = feed_data['Country']
@@ -70,7 +68,6 @@ def add_event_data(feed_data, connection):
                         event_id,
                         time_stamp,
                         date,
-                        time,
                         gmt,
                         venue,
                         country,
@@ -78,14 +75,13 @@ def add_event_data(feed_data, connection):
                         cur_fight,
                         event_start,
                         event_end
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
         )
         insert_data = (
                 event_id,
                 timestamp,
                 date,
-                time,
                 gmt,
                 venue,
                 country,
@@ -280,7 +276,7 @@ def add_fighters_data(fighters_dict, event_id, fight_id, connection):
                         print(error)
 
 
-# NOTE: Script breaks on event id: 891
+# NOTE: Script breaks on event id: 674
 if __name__ == "__main__":
     for idx in list_of_fight_ids:
         print(idx)
