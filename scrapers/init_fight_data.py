@@ -37,17 +37,26 @@ def get_data(fight_id, connection):
         '''
         TBD: Main function with subcalls which writes data to db
         '''
-        r = get(
-                'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
-                .format(fight_id)
-        ).json()
-        f = r['FMLiveFeed']
+        try:
+                r = get(
+                        'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
+                        .format(fight_id)
+                ).json()
+                f = r['FMLiveFeed']
 
-        event_id = int(f['EventID'])
-        fights_data = f['Fights']
+                event_id = int(f['EventID'])
+                fights_data = f['Fights']
 
-        add_event_data(feed_data=f, connection=connection)
-        add_fights_data(fights_data=fights_data, event_id=event_id, connection=connection)
+                add_event_data(feed_data=f, connection=connection)
+                add_fights_data(
+                        fights_data=fights_data,
+                        event_id=event_id,
+                        connection=connection
+                        )
+
+        except ValueError:
+                print('Invalid JSON Response')
+                pass
 
 
 def add_event_data(feed_data, connection):
@@ -286,8 +295,7 @@ def add_fighters_data(fighters_dict, event_id, fight_id, connection):
                         print(error)
 
 
-# NOTE: Script breaks on event id: 674
-# accolade name, weightclass id, and weightclass name are missing keys from fights
+# NOTE: Script breaks on event id: 626
 if __name__ == "__main__":
     for idx in list_of_fight_ids:
         print(idx)
