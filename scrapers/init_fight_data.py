@@ -115,9 +115,22 @@ def add_fights_data(fights_data, event_id, connection):
                         )
 
                 order = fight['Order']
-                accolade_name = fight['AccoladeName']
-                weightclass_id = fight['WeightClassID']
-                weightclass_name = fight['WeightClassName']
+
+                if 'AccoladeName' in fight:
+                        accolade_name = fight['AccoladeName']
+                else:
+                        accolade_name = ''
+
+                if 'WeightClassID' in fight:
+                        weightclass_id = fight['WeightClassID']
+                else:
+                        weightclass_id = ''
+
+                if 'WeightClassName' in fight:
+                        weightclass_name = fight['WeightClassName']
+                else:
+                        weightclass_name = ''
+
                 status = fight['Status']
                 possible_rds = int(fight['PossibleRds'])
                 cur_rd = int(fight['CurRd'])
