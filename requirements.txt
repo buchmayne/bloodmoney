@@ -4,3 +4,4 @@ sqlalchemy
 requests
 flake8
 psycopg2
+selenium
