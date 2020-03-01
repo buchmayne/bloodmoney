@@ -155,7 +155,7 @@ def get_all_event_ids(event_ids_df, total_pages):
     event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)])
     event_ids_df['event_id'] = pd.to_numeric(event_ids_df['event_id'])
     event_ids_df.reset_index(drop=True, inplace=True)
-    event_ids_df.index.names = ['row_idx']
+    event_ids_df.index.names = 'row_idx'
 
     return event_ids_df
 
