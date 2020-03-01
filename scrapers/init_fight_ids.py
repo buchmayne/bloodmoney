@@ -80,9 +80,10 @@ def get_first_page_event_ids(events_page=events_page, headers=headers):
     Outputs:
         event_ids_df: pd.DataFrame
             index:
-                1) event_id: int
+                1) Deafult/Row Id
             columns:
                 1) event_url: str
+                2) event_id: str
     """
     event_ids = extract_event_ids(events_page, headers)
 
@@ -105,7 +106,7 @@ def get_all_event_ids(event_ids_df, total_pages):
     Inputs:
         event_ids_df: pd.DataFrame
             index:
-                1) Default/Row Id
+                1) row_idx
             columns:
                 1) event_url: str
                 2) event_id: str
@@ -153,7 +154,8 @@ def get_all_event_ids(event_ids_df, total_pages):
 
     event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)])
     event_ids_df['event_id'] = pd.to_numeric(event_ids_df['event_id'])
-    event_ids_df.reset_index(inplace=True)
+    event_ids_df.reset_index(drop=True, inplace=True)
+    event_ids_df.index.names = ['row_idx']
 
     return event_ids_df
 
@@ -165,7 +167,6 @@ if __name__ == '__main__':
     all_event_ids.to_sql(
         name='eventid',
         con=db_connect(),
-        if_exists='replace',  # if need to recreate change this to 'replace'
-        index_label='row_idx'
+        if_exists='fail'  # if need to recreate change this to 'replace'
         )
     print('done!')
