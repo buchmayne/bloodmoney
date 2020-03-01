@@ -4,6 +4,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import psycopg2
 from parameters import headers, events_page
+from models import db_connect
 
 
 def extract_event_ids(events_page=events_page, headers=headers):
@@ -49,9 +50,10 @@ def get_new_event_ids(most_recent_event_id, events_page=events_page, headers=hea
     Outputs:
         event_ids_df: pd.DataFrame
             index:
-                1) event_id: int
+                1) row_idx: int
             columns:
                 1) event_url: str
+                2) event_id: int
     """
     event_ids = extract_event_ids(events_page, headers)
 
@@ -110,6 +112,9 @@ def get_new_event_ids(most_recent_event_id, events_page=events_page, headers=hea
             counter += 1
         mp_idx = event_ids_df[event_ids_df['event_id'] == most_recent_event_id].index.values[0]
         event_ids_df = event_ids_df.iloc[:mp_idx, ]
+        event_ids_df.reset_index(drop=True, inplace=True)
+        event_ids_df.index.name = 'row_idx'
+
         return event_ids_df
 
     else:
@@ -118,6 +123,8 @@ def get_new_event_ids(most_recent_event_id, events_page=events_page, headers=hea
             return None
         elif most_recent_event_id in event_ids_df['event_id'].tolist():
             event_ids_df = event_ids_df.iloc[:idx, ]
+            event_ids_df.index.name = 'row_idx'
+
             return event_ids_df
 
 
@@ -130,24 +137,29 @@ if __name__ == "__main__":
     )
 
     cur = conn.cursor()
-    cur.execute("SELECT event_id FROM eventid WHERE event_id IS NOT NULL;")
-
+    cur.execute(
+        """
+        SELECT
+            event_id
+        FROM
+            eventid
+        WHERE
+            event_id IS NOT NULL
+        ORDER BY
+            row_idx ASC
+        LIMIT 1;"""
+        )
     most_recent_event_id = int(cur.fetchone()[0])
+    cur.close()
+    conn.close()
 
     event_df_updated = get_new_event_ids(most_recent_event_id)
 
-    # NOTE: The code works in getting the right pandas data frame
-    # need to figure out way to add the dataframe to the database but add it at the top
-    # since the event_ids aren't incremented by date (a larger event_id isn't necessaril more recent)
-    # I need to make sure I am not messing up the order of the rows in the table
-    # I imagine this could be solved by adding the rows via their indices which are integers
-    # but I don't know enough SQL to make that happen. 
-
-    # if event_df_updated is not None:
-    #     print('Updating Database with new Event Data')
-    #     for index, row in event_df_updated.itertuples():
-    #         cur.execute("INSERT INTO eventid(event_id, event_url) VALUES (%s, %s)", (index, row))
-    #         conn.commit()
-    cur.close()
-    conn.close()
+    if event_df_updated is not None:
+        print('Updating Database with new Event Data')
+        event_df_updated.to_sql(
+            name='eventid',
+            con=db_connect(),
+            if_exists='append'
+        )
     print('done!')
