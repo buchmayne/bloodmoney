@@ -37,9 +37,11 @@ def extract_event_ids(events_page=events_page, headers=headers):
     return event_ids
 
 
-def tmp_func(most_recent_event_id, events_page=events_page, headers=headers):
+def get_new_event_ids(most_recent_event_id, events_page=events_page, headers=headers):
     """
     Inputs:
+        most_recent_event_id: int
+            the event_id of the most recent event recorded in postgres
         events_page: str
             url of the first page of past events
         headers: dict
@@ -66,81 +68,57 @@ def tmp_func(most_recent_event_id, events_page=events_page, headers=headers):
     event_ids_df['event_id'] = event_ids_df['event_id'].astype(int)
 
     # get the row index of the most recently occured event_id
-    idx = event_ids_df[event_ids_df['event_id'] == most_recent_event_id].index.values[0]
-    if idx == 0:
-        return None
-    elif most_recent_event_id in event_ids_df['event_id'].tolist():
-        event_ids_df = event_ids_df.iloc[:idx, ]   
+    if event_ids_df[event_ids_df['event_id'] == most_recent_event_id].empty:
+        counter = 1
+        events_page_format = 'https://www.ufc.com/events?page={}'
+        tmp_pattern = "(?<=href=\"/event/).*(?=\"><span)"
+        while most_recent_event_id not in event_ids_df['event_id'].tolist():
+            # select the correct page from the listed past events
+            tmp_page = events_page_format.format(counter)
+
+            raw_html = get(tmp_page, headers=headers)
+            html = BeautifulSoup(raw_html.content, 'html.parser')
+
+            tmp_ids = []
+
+            tmp_events_past = html.find(id="events-list-past")
+            tmp_result_actions = tmp_events_past.find_all(
+                'div',
+                'c-card-event--result__actions'
+                )
+
+            for i in list(range(len(tmp_result_actions))):
+                try:
+                    tmp = tmp_result_actions[i].find('a')
+                    tmp_ids.append(tmp)
+                except KeyError:
+                    pass
+
+            tmp_ids = [re.findall(tmp_pattern, str(event)) for event in tmp_ids]
+
+            # flatten the list
+            tmp_ids = [item for sublist in tmp_ids for item in sublist]
+
+            tmp_df = pd.DataFrame(tmp_ids, columns=['event'])
+            tmp_df = tmp_df['event'].str.split(pat='#', expand=True)
+
+            tmp_df.columns = ['event_url', 'event_id']
+            tmp_df['event_id'] = tmp_df['event_id'].astype(int)
+
+            # concatenate and reset index
+            event_ids_df = pd.concat([event_ids_df, tmp_df], axis=0).reset_index(drop=True)
+            counter += 1
+        mp_idx = event_ids_df[event_ids_df['event_id'] == most_recent_event_id].index.values[0]
+        event_ids_df = event_ids_df.iloc[:mp_idx, ]
         return event_ids_df
+
     else:
-        pass
-        # NOTE: this is where the function needs to iterate until the most recent id has been matched
-
-
-def get_all_event_ids(event_ids_df, total_pages):
-    """
-    Inputs:
-        event_ids_df: pd.DataFrame
-            index:
-                1) Default/Row Id
-            columns:
-                1) event_url: str
-                2) event_id: str
-        total_pages: int
-            integer count of the total past ufc events divided by events per page
-    """
-    # loop through each page and append the event url and id to the dataframe
-    list_tmp_dfs = []
-    events_page_format = 'https://www.ufc.com/events?page={}'
-    tmp_pattern = "(?<=href=\"/event/).*(?=\"><span)"
-
-    for page_num in range(1, total_pages):
-        # select the correct page from the listed past events
-        tmp_page = events_page_format.format(page_num)
-
-        raw_html = get(tmp_page, headers=headers)
-        html = BeautifulSoup(raw_html.content, 'html.parser')
-
-        tmp_ids = []
-
-        tmp_events_past = html.find(id="events-list-past")
-        tmp_result_actions = tmp_events_past.find_all(
-            'div',
-            'c-card-event--result__actions'
-            )
-
-        for i in list(range(len(tmp_result_actions))):
-            try:
-                tmp = tmp_result_actions[i].find('a')
-                tmp_ids.append(tmp)
-            except KeyError:
-                pass
-
-        tmp_ids = [re.findall(tmp_pattern, str(event)) for event in tmp_ids]
-
-        # flatten the list
-        tmp_ids = [item for sublist in tmp_ids for item in sublist]
-
-        tmp_df = pd.DataFrame(tmp_ids, columns=['event'])
-        tmp_df = tmp_df['event'].str.split(pat='#', expand=True)
-
-        tmp_df.columns = ['event_url', 'event_id']
-
-        list_tmp_dfs.append(tmp_df)
-
-    event_ids_df = pd.concat([event_ids_df, pd.concat(list_tmp_dfs)])
-    event_ids_df['event_id'] = pd.to_numeric(event_ids_df['event_id'])
-    event_ids_df.set_index('event_id', drop=True, inplace=True)
-
-    return event_ids_df
-
-
-# NOTE: The current issue I have found is that the event_id are not incremented linearly. For example
-# UFC 246 is event_id 963 but UFC 247 is event_id 958
-# This is a problem because I can't select the highest event_id from the db and use
-# it to compare to the newly scraped event_id. I need to improve SQL skills to just return the first row of the 
-# table without ordering the column. Then I need to return all of the scraped event_ids that occur before 
-# that event_id
+        idx = event_ids_df[event_ids_df['event_id'] == most_recent_event_id].index.values[0]
+        if idx == 0:
+            return None
+        elif most_recent_event_id in event_ids_df['event_id'].tolist():
+            event_ids_df = event_ids_df.iloc[:idx, ]
+            return event_ids_df
 
 
 if __name__ == "__main__":
@@ -155,13 +133,21 @@ if __name__ == "__main__":
     cur.execute("SELECT event_id FROM eventid WHERE event_id IS NOT NULL;")
 
     most_recent_event_id = int(cur.fetchone()[0])
-    event_df_updated = tmp_func(most_recent_event_id)
 
-    if event_df_updated is not None:
-        print('Updating Database with new Event Data')
-        for index, row in event_df_updated.itertuples():
-            cur.execute("INSERT INTO eventid(event_id, event_url) VALUES (%s, %s)", (index, row))
-            conn.commit()
+    event_df_updated = get_new_event_ids(most_recent_event_id)
+
+    # NOTE: The code works in getting the right pandas data frame
+    # need to figure out way to add the dataframe to the database but add it at the top
+    # since the event_ids aren't incremented by date (a larger event_id isn't necessaril more recent)
+    # I need to make sure I am not messing up the order of the rows in the table
+    # I imagine this could be solved by adding the rows via their indices which are integers
+    # but I don't know enough SQL to make that happen. 
+
+    # if event_df_updated is not None:
+    #     print('Updating Database with new Event Data')
+    #     for index, row in event_df_updated.itertuples():
+    #         cur.execute("INSERT INTO eventid(event_id, event_url) VALUES (%s, %s)", (index, row))
+    #         conn.commit()
     cur.close()
     conn.close()
     print('done!')
