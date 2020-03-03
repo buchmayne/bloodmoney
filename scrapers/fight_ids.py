@@ -163,7 +163,7 @@ if __name__ == "__main__":
                 row_idx
             SET
                 row_idx = row_idx + %s
-            """, len(event_df_updated)
+            """, (len(event_df_updated),)
         )
         # commit the changes to the database
         conn.commit()
