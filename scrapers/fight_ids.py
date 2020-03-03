@@ -157,6 +157,17 @@ if __name__ == "__main__":
 
     if event_df_updated is not None:
         print('Updating Database with new Event Data')
+        cur.execute(
+            """
+            UPDATE
+                row_idx
+            SET
+                row_idx = row_idx + %s
+            """, len(event_df_updated)
+        )
+        # commit the changes to the database
+        conn.commit()
+
         event_df_updated.to_sql(
             name='eventid',
             con=db_connect(),
