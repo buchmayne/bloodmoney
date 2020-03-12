@@ -150,20 +150,19 @@ if __name__ == "__main__":
         LIMIT 1;"""
         )
     most_recent_event_id = int(cur.fetchone()[0])
-    cur.close()
-    conn.close()
 
     event_df_updated = get_new_event_ids(most_recent_event_id)
 
     if event_df_updated is not None:
         print('Updating Database with new Event Data')
+        offset_idx = len(event_df_updated)
         cur.execute(
             """
             UPDATE
-                row_idx
+                eventid
             SET
                 row_idx = row_idx + %s
-            """, (len(event_df_updated),)
+            """, (offset_idx,)
         )
         # commit the changes to the database
         conn.commit()
@@ -173,4 +172,6 @@ if __name__ == "__main__":
             con=db_connect(),
             if_exists='append'
         )
+    cur.close()
+    conn.close()
     print('done!')
