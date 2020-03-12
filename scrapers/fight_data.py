@@ -1,27 +1,9 @@
-from requests import get
-import pandas as pd
+# Outline:
 
-fight_ids = pd.read_csv('data/fight_ids.csv', dtype=str)
-test_event_id = fight_ids.loc[0, 'event_id']
-
-r = get('https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'.format(test_event_id)).json()
-f = r['FMLiveFeed']
-
-# keys from event
-eventid_ = f['EventID']
-timestamp_ = f['Timestamp']
-date_ = f['Date']
-time_ = f['Time']
-gmt_ = f['GMT']
-venue_ = f['Venue']
-country_ = f['Country']
-city_ = f['City']
-curfight_ = f['CurFight']
-eventstart_ = f['EventStart']
-eventend_ = f['EventEnd']
-
-# fight data is contained in the fights key
-fights = f['Fights']
-
-# keys that exist in the fights data
-# 'FightID', 'Order', 'AccoladeName', 'WeightClassID', 'WeightClassName', 'Status', 'PossibleRds', 'CurRd', 'Fighters', 'Method', 'EndingRoundNum', 'FightActions'
+# Need to join the eventid table to the event_data table
+# The purpose is to get the lowest row_idx value that joins to the event_data
+# This will be the most recent event for which the event_data was scraped
+# Knowing this I then need to pull down all the row_idx that are lower
+# Then I need to simply pull down all the event id that are associated with the row_idx
+# If I have the list of the event_ids with missing data
+# Run the already defined functions from the init_fight_data program on the new event ids
