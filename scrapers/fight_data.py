@@ -1,9 +1,50 @@
-# Outline:
+import psycopg2
+from init_fight_data import get_data
 
-# Need to join the eventid table to the event_data table
-# The purpose is to get the lowest row_idx value that joins to the event_data
-# This will be the most recent event for which the event_data was scraped
-# Knowing this I then need to pull down all the row_idx that are lower
-# Then I need to simply pull down all the event id that are associated with the row_idx
-# If I have the list of the event_ids with missing data
-# Run the already defined functions from the init_fight_data program on the new event ids
+conn = psycopg2.connect(
+        host="localhost",
+        database="bloodmoneydb",
+        user="postgres",
+        password="password"
+)
+
+most_recent_fight_id_to_have_fight_data_query = """
+    WITH tmp_join AS (
+        SELECT *
+        FROM event_data
+        INNER JOIN eventid ON (event_data.event_id = eventid.event_id)
+    )
+    SELECT
+    tmp_join.row_idx
+    FROM tmp_join
+    ORDER BY tmp_join.row_idx ASC LIMIT 1;
+"""
+
+fight_ids_needing_fight_data_query = """
+    SELECT eventid.event_id
+    FROM eventid
+    WHERE eventid.row_idx < %s;
+"""
+
+cur = conn.cursor()
+cur.execute(most_recent_fight_id_to_have_fight_data_query)
+
+most_recent_fight_id_to_have_fight_data = str(cur.fetchone()[0])
+
+cur.execute(
+    fight_ids_needing_fight_data_query, most_recent_fight_id_to_have_fight_data
+    )
+
+fight_ids_needing_fight_data = cur.fetchall()
+
+fight_ids_needing_fight_data = [
+    int(fight_id[0]) for fight_id in fight_ids_needing_fight_data
+    ]
+
+
+if __name__ == "__main__":
+    for idx in fight_ids_needing_fight_data:
+        print(idx)
+        get_data(fight_id=idx, connection=conn)
+    conn.close()
+    print('finished')
