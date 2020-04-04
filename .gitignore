@@ -5,3 +5,4 @@ scrapers/.vscode/
 scrapers/__pycache__/
 geckodriver.log
 Untitled.ipynb
+preprocessing/helper.md
