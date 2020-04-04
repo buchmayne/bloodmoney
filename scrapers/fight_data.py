@@ -1,27 +1,50 @@
-from requests import get
-import pandas as pd
+import psycopg2
+from init_fight_data import get_data
 
-fight_ids = pd.read_csv('data/fight_ids.csv', dtype=str)
-test_event_id = fight_ids.loc[0, 'event_id']
+conn = psycopg2.connect(
+        host="localhost",
+        database="bloodmoneydb",
+        user="postgres",
+        password="password"
+)
 
-r = get('https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'.format(test_event_id)).json()
-f = r['FMLiveFeed']
+most_recent_fight_id_to_have_fight_data_query = """
+    WITH tmp_join AS (
+        SELECT *
+        FROM event_data
+        INNER JOIN eventid ON (event_data.event_id = eventid.event_id)
+    )
+    SELECT
+    tmp_join.row_idx
+    FROM tmp_join
+    ORDER BY tmp_join.row_idx ASC LIMIT 1;
+"""
 
-# keys from event
-eventid_ = f['EventID']
-timestamp_ = f['Timestamp']
-date_ = f['Date']
-time_ = f['Time']
-gmt_ = f['GMT']
-venue_ = f['Venue']
-country_ = f['Country']
-city_ = f['City']
-curfight_ = f['CurFight']
-eventstart_ = f['EventStart']
-eventend_ = f['EventEnd']
+fight_ids_needing_fight_data_query = """
+    SELECT eventid.event_id
+    FROM eventid
+    WHERE eventid.row_idx < %s;
+"""
 
-# fight data is contained in the fights key
-fights = f['Fights']
+cur = conn.cursor()
+cur.execute(most_recent_fight_id_to_have_fight_data_query)
 
-# keys that exist in the fights data
-# 'FightID', 'Order', 'AccoladeName', 'WeightClassID', 'WeightClassName', 'Status', 'PossibleRds', 'CurRd', 'Fighters', 'Method', 'EndingRoundNum', 'FightActions'
+most_recent_fight_id_to_have_fight_data = str(cur.fetchone()[0])
+
+cur.execute(
+    fight_ids_needing_fight_data_query, most_recent_fight_id_to_have_fight_data
+    )
+
+fight_ids_needing_fight_data = cur.fetchall()
+
+fight_ids_needing_fight_data = [
+    int(fight_id[0]) for fight_id in fight_ids_needing_fight_data
+    ]
+
+
+if __name__ == "__main__":
+    for idx in fight_ids_needing_fight_data:
+        print(idx)
+        get_data(fight_id=idx, connection=conn)
+    conn.close()
+    print('finished')

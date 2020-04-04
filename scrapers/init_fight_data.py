@@ -24,15 +24,6 @@ def format_event_date(text):
     return formatted_date
 
 
-# test_fight_id = list_of_fight_ids[0]
-
-# r = get(
-#     'https://dvk92099qvr17.cloudfront.net/V1/{}/Fnt.json'
-#     .format(674)
-#     ).json()
-# f = r['FMLiveFeed']
-
-
 def get_data(fight_id, connection):
         '''
         TBD: Main function with subcalls which writes data to db
@@ -295,7 +286,6 @@ def add_fighters_data(fighters_dict, event_id, fight_id, connection):
                         print(error)
 
 
-# NOTE: Script breaks on event id: 626
 if __name__ == "__main__":
     for idx in list_of_fight_ids:
         print(idx)
