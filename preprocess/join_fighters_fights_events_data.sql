@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS joined_fight_event_fighters_data;
 CREATE TABLE joined_fight_event_fighters_data AS
 SELECT 
     event_data.date,
